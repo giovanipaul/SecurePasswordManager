@@ -1,0 +1,45 @@
+### Password Manager data — never commit ###
+vault.json
+vault.json.tmp
+vault.json.backup
+*.vault
+
+### Maven ###
+target/
+.mvn/timing.properties
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.iws
+*.ipr
+
+### Eclipse ###
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+### NetBeans ###
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+
+### VS Code ###
+.vscode/
+
+### Build output ###
+build/
+out/
+
+### Operating system files ###
+.DS_Store
+Thumbs.db
+
+### Logs and temporary files ###
+*.log
+*.tmp
