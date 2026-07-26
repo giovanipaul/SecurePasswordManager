@@ -42,11 +42,13 @@ public class CryptoService {
 	public SecretKey deriveKey(char[] masterPassword, byte[] salt, int iterations, int keyLengthBits)
 			throws GeneralSecurityException {
 		PBEKeySpec spec = new PBEKeySpec(masterPassword, salt, iterations, keyLengthBits);
+		byte[] keyBytes = null;
 		try {
 			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-			byte[] keyBytes = skf.generateSecret(spec).getEncoded();
+			keyBytes = skf.generateSecret(spec).getEncoded();
 			return new SecretKeySpec(keyBytes, "AES");
 		} finally {
+			wipe(keyBytes);
 			spec.clearPassword();
 		}
 	}
