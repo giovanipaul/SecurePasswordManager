@@ -4,6 +4,8 @@
 ![Java 17+](https://img.shields.io/badge/Java-17%2B-ED8B00?logo=openjdk&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+![Secure Password Manager terminal demo](docs/assets/secure-password-manager-demo.gif)
+
 An offline Java password manager demonstrating authenticated encryption,
 crash-safe persistence, session lifecycle management, automated testing, and
 cross-platform delivery.
