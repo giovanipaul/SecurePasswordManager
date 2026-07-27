@@ -6,6 +6,9 @@
 
 ![Secure Password Manager terminal demo](docs/assets/secure-password-manager-demo.gif)
 
+[Download the runnable v1.0.0 JAR](https://github.com/giovanipaul/SecurePasswordManager/releases/download/v1.0.0/secure-password-manager-1.0.0-all.jar)
+· [View release notes](https://github.com/giovanipaul/SecurePasswordManager/releases/tag/v1.0.0)
+
 An offline Java password manager demonstrating authenticated encryption,
 crash-safe persistence, session lifecycle management, automated testing, and
 cross-platform delivery.
@@ -57,6 +60,24 @@ The application stores one JSON envelope containing Base64-encoded encryption me
 - **Local data protection:** `vault.json` and temporary vault files are excluded by `.gitignore`
 
 No encryption keys or passwords are hard-coded in the source.
+
+## Security Decisions
+
+The security choices are intentionally documented with their trade-offs so the
+design can be reviewed rather than treated as a black box.
+
+| Decision | Why it was chosen | Trade-off |
+|---|---|---|
+| AES-256-GCM | Provides confidentiality and integrity in one authenticated-encryption operation | Nonce reuse would be dangerous, so every save generates a fresh random IV |
+| PBKDF2-HMAC-SHA-256 | Available in the Java standard library, portable across supported platforms, and deliberately expensive for password guessing | PBKDF2 is not memory-hard; Argon2id is the planned upgrade path |
+| Authenticated envelope metadata | Detects tampering with KDF and cipher parameters before accepting decrypted data | Format changes require explicit versioning and compatibility handling |
+| Atomic file replacement | Keeps the previous vault intact if a save is interrupted or fails | Requires temporary-file handling and a fallback when atomic moves are unavailable |
+| Explicit session locking | Reduces how long sensitive data and the master password remain actively reachable | Java strings and garbage collection prevent guaranteed removal of every plaintext copy |
+
+These decisions are supported by failure-path tests for wrong passwords,
+tampered metadata, corrupted or oversized vaults, interrupted saves,
+master-password rotation, and inactivity-based locking. Remaining risks and
+trust boundaries are documented in [SECURITY.md](SECURITY.md).
 
 ## Requirements
 
