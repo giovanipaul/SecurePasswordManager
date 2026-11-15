@@ -16,7 +16,7 @@ public class CryptoService {
 
 	// KDF settings (tunable)
 	public static final int SALT_LEN = 16;
-	public static final int PBKDF2_ITERATIONS = 210_000;
+	public static final int PBKDF2_ITERATIONS = 600_000;
 	public static final int KEY_LEN_BITS = 256;
 
 	// AES-GCM settings
