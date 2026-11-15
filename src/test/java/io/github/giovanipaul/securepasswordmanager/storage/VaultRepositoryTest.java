@@ -34,6 +34,11 @@ class VaultRepositoryTest {
 		String stored = Files.readString(path);
 		assertTrue(stored.contains("\"version\" : 2"));
 		assertTrue(stored.contains("\"kdf\" : \"PBKDF2WithHmacSHA256\""));
+		assertTrue(stored.contains("\"iterations\" : 600000"));
+		if (Files.getFileStore(path).supportsFileAttributeView("posix")) {
+			assertEquals(java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"),
+					Files.getPosixFilePermissions(path));
+		}
 		assertFalse(stored.contains("SecretPass1!"));
 		assertFalse(stored.contains("giovani"));
 		assertEquals("Example", repository.load(path, master).getEntries().get(0).getSite());
@@ -69,7 +74,7 @@ class VaultRepositoryTest {
 		char[] master = "StrongMaster1!".toCharArray();
 		byte[] salt = crypto.randomSalt();
 		byte[] iv = crypto.randomIv();
-		SecretKey key = crypto.deriveKey(master, salt);
+		SecretKey key = crypto.deriveKey(master, salt, 210_000, CryptoService.KEY_LEN_BITS);
 		byte[] ciphertext = crypto.encrypt(mapper.writeValueAsBytes(vault), key, iv);
 
 		VaultFile legacy = new VaultFile();

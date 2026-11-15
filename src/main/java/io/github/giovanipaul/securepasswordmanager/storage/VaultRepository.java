@@ -11,13 +11,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.GeneralSecurityException;
 import java.util.Base64;
 import java.util.Objects;
+import java.util.Set;
 
 public class VaultRepository {
 
 	static final int CURRENT_VERSION = 2;
+	static final int LEGACY_ITERATIONS = 210_000;
 	static final String KDF = "PBKDF2WithHmacSHA256";
 	static final String CIPHER = "AES/GCM/NoPadding";
 	private static final long MAX_VAULT_FILE_BYTES = 10L * 1024 * 1024;
@@ -55,10 +59,16 @@ public class VaultRepository {
 		byte[] ciphertext = null;
 		Path absolutePath = path.toAbsolutePath();
 		Path parent = Objects.requireNonNull(absolutePath.getParent(), "Vault path must have a parent.");
-		Path tempPath = parent.resolve(absolutePath.getFileName() + ".tmp");
+		Path tempPath = null;
 
 		try {
 			Files.createDirectories(parent);
+			if (Files.getFileStore(parent).supportsFileAttributeView("posix")) {
+				tempPath = Files.createTempFile(parent, ".vault-", ".tmp", PosixFilePermissions
+						.asFileAttribute(Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE)));
+			} else {
+				tempPath = Files.createTempFile(parent, ".vault-", ".tmp");
+			}
 			SecretKey key = crypto.deriveKey(masterPassword, salt);
 			plaintext = mapper.writeValueAsBytes(vault);
 
@@ -78,7 +88,9 @@ public class VaultRepository {
 			Files.write(tempPath, fileJson);
 			moveIntoPlace(tempPath, absolutePath);
 		} finally {
-			Files.deleteIfExists(tempPath);
+			if (tempPath != null) {
+				Files.deleteIfExists(tempPath);
+			}
 			CryptoService.wipe(plaintext);
 			CryptoService.wipe(ciphertext);
 			CryptoService.wipe(salt);
@@ -112,7 +124,7 @@ public class VaultRepository {
 				throw new IOException("Vault file contains invalid encryption metadata.");
 			}
 
-			int iterations = vf.version == 1 ? CryptoService.PBKDF2_ITERATIONS : vf.iterations;
+			int iterations = vf.version == 1 ? LEGACY_ITERATIONS : vf.iterations;
 			int keyLengthBits = vf.version == 1 ? CryptoService.KEY_LEN_BITS : vf.keyLengthBits;
 			SecretKey key = crypto.deriveKey(masterPassword, salt, iterations, keyLengthBits);
 			byte[] associatedData = vf.version == 1 ? null : authenticatedMetadata(vf);
