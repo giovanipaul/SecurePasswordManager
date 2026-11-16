@@ -104,8 +104,7 @@ class ConsoleUITest {
 		String input = String.join(System.lineSeparator(), "StrongMaster1!", "StrongMaster1!", "14", "password", "0")
 				+ System.lineSeparator();
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		BreachChecker checker = new BreachChecker(
-				prefix -> "1E4C9B93F3F0682250B6CF8331B7EE68FD8:9543778\n");
+		BreachChecker checker = new BreachChecker(prefix -> "1E4C9B93F3F0682250B6CF8331B7EE68FD8:9543778\n");
 
 		ConsoleUI ui = new ConsoleUI(new VaultRepository(new CryptoService()), new VaultService(),
 				new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), new PrintStream(output),
@@ -123,8 +122,7 @@ class ConsoleUITest {
 		String input = String.join(System.lineSeparator(), "StrongMaster1!", "StrongMaster1!", "14", "password", "0")
 				+ System.lineSeparator();
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		BreachChecker checker = new BreachChecker(
-				prefix -> "0018A45C4D1DEF81644B54AB7F969B88D65:3\n");
+		BreachChecker checker = new BreachChecker(prefix -> "0018A45C4D1DEF81644B54AB7F969B88D65:3\n");
 
 		ConsoleUI ui = new ConsoleUI(new VaultRepository(new CryptoService()), new VaultService(),
 				new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), new PrintStream(output),

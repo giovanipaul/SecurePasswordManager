@@ -35,11 +35,8 @@ final class HaveIBeenPwnedClient implements BreachRangeFetcher {
 			throw new IllegalArgumentException("Hash prefix must be 5 uppercase hex characters.");
 		}
 		HttpRequest request = HttpRequest.newBuilder(URI.create(RANGE_URL + prefix))
-				.header("User-Agent", "SecurePasswordManager/1.1.0")
-				.header("Add-Padding", "true")
-				.timeout(REQUEST_TIMEOUT)
-				.GET()
-				.build();
+				.header("User-Agent", "SecurePasswordManager/1.1.0").header("Add-Padding", "true")
+				.timeout(REQUEST_TIMEOUT).GET().build();
 		HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
 		if (response.statusCode() != 200) {
 			throw new IOException("HaveIBeenPwned returned HTTP " + response.statusCode() + ".");

@@ -19,7 +19,7 @@ import java.security.NoSuchAlgorithmException;
  * does not prove the password is strong; it only means it has not appeared in
  * a known public breach.
  */
-public class BreachChecker {
+public final class BreachChecker {
 
 	private static final int PREFIX_LENGTH = 5;
 

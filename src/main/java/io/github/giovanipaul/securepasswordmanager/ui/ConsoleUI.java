@@ -711,7 +711,8 @@ public class ConsoleUI implements AutoCloseable {
 		out.println("  unlock     Reopen a locked session with the master password.");
 		out.println("  status     Show lock, save, auto-lock, clipboard, and file information.");
 		out.println("  password   Verify and replace the master password using atomic re-encryption.");
-		out.println("  breach     Check a password against the HaveIBeenPwned breach data (only a hash prefix is sent).");
+		out.println(
+				"  breach     Check a password against the HaveIBeenPwned breach data (only a hash prefix is sent).");
 		out.println("  exit       Save if needed, lock the vault, and close the application.");
 		out.println();
 		out.println("Examples: enter '2' to add, 'list' to browse, or '?' for this screen.");
