@@ -9,8 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 /**
- * Live HaveIBeenPwned range client. Sends only the 5-character hash prefix;
- * the password and the full hash never leave the machine.
+ * Live HaveIBeenPwned range client. Sends only the 5-character hash prefix; the
+ * password and the full hash never leave the machine.
  */
 final class HaveIBeenPwnedClient implements BreachRangeFetcher {
 

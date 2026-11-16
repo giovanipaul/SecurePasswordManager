@@ -15,9 +15,10 @@ import java.security.NoSuchAlgorithmException;
  * matching suffix is looked up locally in the returned range. The password and
  * the full hash never leave the machine.
  *
- * <p>A result of 0 means the password was not found in the breach data. That
- * does not prove the password is strong; it only means it has not appeared in
- * a known public breach.
+ * <p>
+ * A result of 0 means the password was not found in the breach data. That does
+ * not prove the password is strong; it only means it has not appeared in a
+ * known public breach.
  */
 public final class BreachChecker {
 
@@ -30,8 +31,8 @@ public final class BreachChecker {
 	}
 
 	/**
-	 * Test seam: uses the given range fetcher instead of the live
-	 * HaveIBeenPwned client, so checks run without network access.
+	 * Test seam: uses the given range fetcher instead of the live HaveIBeenPwned
+	 * client, so checks run without network access.
 	 */
 	public BreachChecker(BreachRangeFetcher fetcher) {
 		if (fetcher == null) {
