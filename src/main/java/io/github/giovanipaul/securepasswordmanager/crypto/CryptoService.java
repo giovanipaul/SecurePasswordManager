@@ -16,7 +16,7 @@ public class CryptoService {
 
 	// KDF settings (tunable)
 	public static final int SALT_LEN = 16;
-	public static final int PBKDF2_ITERATIONS = 210_000;
+	public static final int PBKDF2_ITERATIONS = 600_000;
 	public static final int KEY_LEN_BITS = 256;
 
 	// AES-GCM settings
@@ -42,11 +42,13 @@ public class CryptoService {
 	public SecretKey deriveKey(char[] masterPassword, byte[] salt, int iterations, int keyLengthBits)
 			throws GeneralSecurityException {
 		PBEKeySpec spec = new PBEKeySpec(masterPassword, salt, iterations, keyLengthBits);
+		byte[] keyBytes = null;
 		try {
 			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-			byte[] keyBytes = skf.generateSecret(spec).getEncoded();
+			keyBytes = skf.generateSecret(spec).getEncoded();
 			return new SecretKeySpec(keyBytes, "AES");
 		} finally {
+			wipe(keyBytes);
 			spec.clearPassword();
 		}
 	}
