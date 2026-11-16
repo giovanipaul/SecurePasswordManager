@@ -49,7 +49,7 @@ for the threat model.
 The application stores one JSON envelope containing Base64-encoded encryption metadata and ciphertext. Service names, usernames, passwords, and notes are encrypted together; they are not written as plaintext fields.
 
 - **Versioned envelope:** v2 stores explicit KDF, iteration, key-length, and cipher parameters; legacy v1 vaults remain readable
-- **Key derivation:** PBKDF2-HMAC-SHA-256 with a random 16-byte salt, 210,000 iterations, and a 256-bit derived key
+- **Key derivation:** PBKDF2-HMAC-SHA-256 with a random 16-byte salt, 600,000 iterations for new saves, and a 256-bit derived key; older vaults remain readable
 - **Encryption:** AES-256-GCM with a random 12-byte IV and 128-bit authentication tag
 - **Integrity:** AES-GCM rejects a wrong master password, modified ciphertext, or modified v2 encryption metadata
 - **Fresh encryption metadata:** every save generates a new salt and IV
@@ -106,7 +106,7 @@ Build the self-contained executable JAR:
 
 ```bash
 ./mvnw clean verify
-java -jar target/secure-password-manager-1.0-SNAPSHOT-all.jar
+java -jar target/secure-password-manager-1.0.0-all.jar
 ```
 
 `verify` runs tests, coverage enforcement, SpotBugs, formatting checks, and
