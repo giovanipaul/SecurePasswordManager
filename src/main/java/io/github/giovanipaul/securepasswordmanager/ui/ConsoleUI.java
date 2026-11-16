@@ -3,6 +3,7 @@ package io.github.giovanipaul.securepasswordmanager.ui;
 import io.github.giovanipaul.securepasswordmanager.crypto.CryptoService;
 import io.github.giovanipaul.securepasswordmanager.model.Vault;
 import io.github.giovanipaul.securepasswordmanager.model.VaultEntry;
+import io.github.giovanipaul.securepasswordmanager.service.BreachChecker;
 import io.github.giovanipaul.securepasswordmanager.service.PasswordGenerator;
 import io.github.giovanipaul.securepasswordmanager.service.PasswordPolicy;
 import io.github.giovanipaul.securepasswordmanager.service.VaultService;
@@ -34,6 +35,7 @@ public class ConsoleUI implements AutoCloseable {
 	private final VaultRepository repository;
 	private final VaultService vaultService;
 	private final PasswordGenerator passwordGenerator;
+	private final BreachChecker breachChecker;
 	private final VaultSession session;
 	private final ClipboardService clipboard;
 	private final Scanner scanner;
@@ -52,9 +54,15 @@ public class ConsoleUI implements AutoCloseable {
 
 	ConsoleUI(VaultRepository repository, VaultService vaultService, InputStream input, PrintStream output,
 			Duration autoLockTimeout) {
+		this(repository, vaultService, input, output, autoLockTimeout, new BreachChecker());
+	}
+
+	ConsoleUI(VaultRepository repository, VaultService vaultService, InputStream input, PrintStream output,
+			Duration autoLockTimeout, BreachChecker breachChecker) {
 		this.repository = repository;
 		this.vaultService = vaultService;
 		this.passwordGenerator = new PasswordGenerator();
+		this.breachChecker = breachChecker;
 		this.session = new VaultSession(autoLockTimeout);
 		this.clipboard = new ClipboardService();
 		this.scanner = new Scanner(input, StandardCharsets.UTF_8);
@@ -244,6 +252,10 @@ public class ConsoleUI implements AutoCloseable {
 				changeMasterPassword();
 				yield true;
 			}
+			case "14", "breach", "check" -> {
+				checkTypedPasswordBreach();
+				yield true;
+			}
 			case "0", "exit", "quit" -> !exitApplication();
 			case "" -> true;
 			default -> {
@@ -327,6 +339,7 @@ public class ConsoleUI implements AutoCloseable {
 		out.println();
 		out.println("1) Reveal password");
 		out.println("2) Copy password");
+		out.println("3) Check password against known breaches");
 		out.println("0) Back to main menu");
 		String action = promptLine("Choose an option: ");
 		if (action.equals("1")) {
@@ -337,6 +350,9 @@ public class ConsoleUI implements AutoCloseable {
 		} else if (action.equals("2")) {
 			if (verifyMasterPassword())
 				copySecret(entry.getPassword());
+		} else if (action.equals("3")) {
+			if (verifyMasterPassword())
+				checkEntryPasswordBreach(entry);
 		} else if (!action.equals("0")) {
 			printError("Unknown option. Returning to the main menu.");
 		}
@@ -430,6 +446,43 @@ public class ConsoleUI implements AutoCloseable {
 				printInfo("Generated password discarded.");
 		} finally {
 			CryptoService.wipe(password);
+		}
+	}
+
+	private void checkTypedPasswordBreach() {
+		if (!ensureUnlocked())
+			return;
+		printHeading("Check Password Against Known Breaches");
+		char[] password = promptSecret("Password to check: ");
+		try {
+			checkPasswordBreach(password);
+		} finally {
+			CryptoService.wipe(password);
+		}
+	}
+
+	private void checkEntryPasswordBreach(VaultEntry entry) {
+		char[] password = entry.getPassword().toCharArray();
+		try {
+			checkPasswordBreach(password);
+		} finally {
+			CryptoService.wipe(password);
+		}
+	}
+
+	private void checkPasswordBreach(char[] password) {
+		printInfo("Only the first 5 characters of the password hash are sent to HaveIBeenPwned.");
+		printInfo("The password itself never leaves this machine.");
+		try {
+			long occurrences = breachChecker.check(password);
+			if (occurrences > 0) {
+				printError("This password appeared in " + occurrences + " known data breach(es). Change it.");
+			} else {
+				printSuccess("This password was not found in the HaveIBeenPwned breach data.");
+			}
+		} catch (IOException e) {
+			printError("The breach check could not be completed. Check your internet connection and try again.");
+			out.println("Details: " + readableMessage(e));
 		}
 	}
 
@@ -637,7 +690,7 @@ public class ConsoleUI implements AutoCloseable {
 		out.println("  4. Update credential      10. Lock or unlock");
 		out.println("  5. Delete credential      11. Vault status");
 		out.println("  6. Search credentials     12. Help");
-		out.println(" 13. Change master password");
+		out.println(" 13. Change master password  14. Check for breaches");
 		out.println("  0. Save and exit");
 		out.println("--------------------------------------------------------------");
 	}
@@ -658,6 +711,8 @@ public class ConsoleUI implements AutoCloseable {
 		out.println("  unlock     Reopen a locked session with the master password.");
 		out.println("  status     Show lock, save, auto-lock, clipboard, and file information.");
 		out.println("  password   Verify and replace the master password using atomic re-encryption.");
+		out.println(
+				"  breach     Check a password against the HaveIBeenPwned breach data (only a hash prefix is sent).");
 		out.println("  exit       Save if needed, lock the vault, and close the application.");
 		out.println();
 		out.println("Examples: enter '2' to add, 'list' to browse, or '?' for this screen.");
