@@ -4,6 +4,11 @@
 ![Java 17+](https://img.shields.io/badge/Java-17%2B-ED8B00?logo=openjdk&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+![Secure Password Manager terminal demo](docs/assets/secure-password-manager-demo.gif)
+
+[Download the runnable v1.0.0 JAR](https://github.com/giovanipaul/SecurePasswordManager/releases/download/v1.0.0/secure-password-manager-1.0.0-all.jar)
+· [View release notes](https://github.com/giovanipaul/SecurePasswordManager/releases/tag/v1.0.0)
+
 An offline Java password manager demonstrating authenticated encryption,
 crash-safe persistence, session lifecycle management, automated testing, and
 cross-platform delivery.
@@ -44,7 +49,7 @@ for the threat model.
 The application stores one JSON envelope containing Base64-encoded encryption metadata and ciphertext. Service names, usernames, passwords, and notes are encrypted together; they are not written as plaintext fields.
 
 - **Versioned envelope:** v2 stores explicit KDF, iteration, key-length, and cipher parameters; legacy v1 vaults remain readable
-- **Key derivation:** PBKDF2-HMAC-SHA-256 with a random 16-byte salt, 210,000 iterations, and a 256-bit derived key
+- **Key derivation:** PBKDF2-HMAC-SHA-256 with a random 16-byte salt, 600,000 iterations for new saves, and a 256-bit derived key; older vaults remain readable
 - **Encryption:** AES-256-GCM with a random 12-byte IV and 128-bit authentication tag
 - **Integrity:** AES-GCM rejects a wrong master password, modified ciphertext, or modified v2 encryption metadata
 - **Fresh encryption metadata:** every save generates a new salt and IV
@@ -55,6 +60,24 @@ The application stores one JSON envelope containing Base64-encoded encryption me
 - **Local data protection:** `vault.json` and temporary vault files are excluded by `.gitignore`
 
 No encryption keys or passwords are hard-coded in the source.
+
+## Security Decisions
+
+The security choices are intentionally documented with their trade-offs so the
+design can be reviewed rather than treated as a black box.
+
+| Decision | Why it was chosen | Trade-off |
+|---|---|---|
+| AES-256-GCM | Provides confidentiality and integrity in one authenticated-encryption operation | Nonce reuse would be dangerous, so every save generates a fresh random IV |
+| PBKDF2-HMAC-SHA-256 | Available in the Java standard library, portable across supported platforms, and deliberately expensive for password guessing | PBKDF2 is not memory-hard; Argon2id is the planned upgrade path |
+| Authenticated envelope metadata | Detects tampering with KDF and cipher parameters before accepting decrypted data | Format changes require explicit versioning and compatibility handling |
+| Atomic file replacement | Keeps the previous vault intact if a save is interrupted or fails | Requires temporary-file handling and a fallback when atomic moves are unavailable |
+| Explicit session locking | Reduces how long sensitive data and the master password remain actively reachable | Java strings and garbage collection prevent guaranteed removal of every plaintext copy |
+
+These decisions are supported by failure-path tests for wrong passwords,
+tampered metadata, corrupted or oversized vaults, interrupted saves,
+master-password rotation, and inactivity-based locking. Remaining risks and
+trust boundaries are documented in [SECURITY.md](SECURITY.md).
 
 ## Requirements
 
@@ -83,7 +106,7 @@ Build the self-contained executable JAR:
 
 ```bash
 ./mvnw clean verify
-java -jar target/secure-password-manager-1.0-SNAPSHOT-all.jar
+java -jar target/secure-password-manager-1.0.0-all.jar
 ```
 
 `verify` runs tests, coverage enforcement, SpotBugs, formatting checks, and
