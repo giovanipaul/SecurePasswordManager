@@ -41,6 +41,7 @@ for the threat model.
 - Five-minute inactivity auto-lock
 - Clipboard copy with conditional automatic clearing (15 seconds by default)
 - Duplicate and blank-field validation
+- Check a password against the HaveIBeenPwned breach data (menu 14, or option 3 when viewing a credential)
 - Friendly handling of invalid commands, damaged files, wrong passwords, and unavailable clipboards
 - Atomic vault-file replacement to protect the previous saved file when a write fails
 
@@ -56,6 +57,7 @@ The application stores one JSON envelope containing Base64-encoded encryption me
 - **Session handling:** the in-memory master-password character array is cleared on lock and exit where reasonably possible
 - **Sensitive actions:** saved passwords remain masked and require master-password verification before reveal or copy
 - **Safe saving:** encrypted output is written to a temporary file and then moved into place
+- **Breach checking:** HaveIBeenPwned k-anonymity lookup; only the first 5 characters of the password's SHA-1 hash are sent, and the full hash and password never leave the machine
 - **Defensive parsing:** vault and ciphertext sizes are bounded before expensive parsing or decryption
 - **Local data protection:** `vault.json` and temporary vault files are excluded by `.gitignore`
 
@@ -138,6 +140,7 @@ On first run, create and confirm a master password. It must contain at least 12 
 | 11 | `status` | Display lock, save, timeout, clipboard, and path details |
 | 12 | `help` | Explain every feature and command |
 | 13 | `password` | Verify the current master password and atomically re-encrypt with a new one |
+| 14 | `breach` | Check a password against known breach data |
 | 0 | `exit` | Save if needed, lock, and close |
 
 ## Sample Usage
@@ -179,6 +182,27 @@ The clipboard clears after 15 seconds by default. Set a value from 1 to 300 seco
 
 If the operating system or terminal does not allow clipboard access, the application shows a readable message and leaves the vault unchanged.
 
+## Checking Passwords Against Known Breaches
+
+Menu option 14 (`breach`) checks a typed password against the
+[HaveIBeenPwned](https://haveibeenpwned.com/Passwords) breach data. Option 3
+in the view-credential screen checks a saved credential the same way.
+
+The check uses k-anonymity: the password is hashed locally with SHA-1 and
+only the first 5 characters of the hash are sent to
+`api.pwnedpasswords.com`. The service returns every breached hash sharing
+that prefix, and the match is done locally. The password and the full hash
+never leave the machine. A 5-character prefix narrows the password to roughly
+one million possible hashes; that is the documented trade-off of the design.
+
+The result reports how many times the password appeared in known breaches,
+or that it was not found. A password that appears should be changed
+everywhere it is used. Not being found does not prove a password is strong;
+it only means it has not appeared in a known public breach.
+
+The check needs internet access. If the request fails, the application
+reports it and leaves the vault unchanged.
+
 ## Project Structure
 
 ```text
@@ -191,7 +215,10 @@ src/
 │   │   ├── VaultService.java        Validation, search, and CRUD operations
 │   │   ├── VaultSession.java        Lock state and inactivity timeout
 │   │   ├── PasswordGenerator.java   Secure password generation
-│   │   └── PasswordPolicy.java      Password-strength validation
+│   │   ├── PasswordPolicy.java      Password-strength validation
+│   │   ├── BreachChecker.java       HaveIBeenPwned k-anonymity breach checks
+│   │   ├── BreachRangeFetcher.java  Range-fetch seam (fake in tests, live client in use)
+│   │   └── HaveIBeenPwnedClient.java  Range-request client (prefix only)
 │   ├── storage/                     Encrypted JSON persistence and file envelope
 │   └── ui/
 │       ├── ConsoleUI.java           Menu workflows, prompts, and readable messages
@@ -210,7 +237,7 @@ Run all tests:
 ./mvnw test
 ```
 
-The 25-test JUnit suite covers:
+The 39-test JUnit suite covers:
 
 - CRUD, search, duplicate handling, blank fields, and clear-vault behavior
 - Password policy and generator constraints
@@ -219,6 +246,7 @@ The 25-test JUnit suite covers:
 - Encrypted persistence, oversized/corrupted input, atomic temporary-file cleanup, and overwrite protection
 - Master-password rotation and rejection of the previous password
 - Auto-lock expiration and activity refresh
+- Breach-check hash-prefix handling, match counting, malformed responses, transport failures, client prefix validation, and menu reporting
 - First-run vault creation, numbered menu persistence, and invalid-command terminal guidance
 
 ## Current Limitations

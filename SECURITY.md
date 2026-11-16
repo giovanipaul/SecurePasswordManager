@@ -45,3 +45,6 @@ The application does not claim to protect against:
 - Master-password arrays and intermediate byte arrays are wiped where Java
   permits a meaningful best-effort wipe.
 - No recovery mechanism or hidden key exists.
+- Breach checks send only the first 5 characters of a password's SHA-1 hash
+  to HaveIBeenPwned; the password and the full hash never leave the machine.
+  The range response is treated as untrusted input and parsed defensively.
