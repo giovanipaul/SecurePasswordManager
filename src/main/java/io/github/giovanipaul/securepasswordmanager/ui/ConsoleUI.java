@@ -25,7 +25,6 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class ConsoleUI implements AutoCloseable {
@@ -61,7 +60,11 @@ public class ConsoleUI implements AutoCloseable {
 		this.scanner = new Scanner(input, StandardCharsets.UTF_8);
 		this.out = output;
 		this.systemIo = input == System.in && output == System.out;
-		this.autoLockMonitor = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory());
+		this.autoLockMonitor = Executors.newSingleThreadScheduledExecutor(runnable -> {
+			Thread thread = new Thread(runnable, "password-manager-auto-lock");
+			thread.setDaemon(true);
+			return thread;
+		});
 	}
 
 	public void run(Path path) {
@@ -127,6 +130,7 @@ public class ConsoleUI implements AutoCloseable {
 				vault = repository.load(vaultPath, attempt);
 				session.unlock(attempt);
 				printSuccess("Vault unlocked. " + vault.getEntries().size() + " saved credential(s) loaded.");
+				offerVaultUpgrade(attempt);
 				return true;
 			} catch (AEADBadTagException e) {
 				printError("Incorrect master password or the encrypted vault was modified.");
@@ -144,6 +148,19 @@ public class ConsoleUI implements AutoCloseable {
 		}
 		printError("Too many failed unlock attempts. The application will close.");
 		return false;
+	}
+
+	private void offerVaultUpgrade(char[] masterPassword) {
+		try {
+			if (repository.needsKeyDerivationUpgrade(vaultPath)
+					&& confirm("Upgrade this vault to stronger key derivation now?")) {
+				repository.save(vaultPath, masterPassword, vault);
+				printSuccess("Vault upgraded to the current key derivation settings.");
+			}
+		} catch (IOException | GeneralSecurityException e) {
+			printError("Vault upgrade failed; check your vault backup before continuing.");
+			out.println("Details: " + readableMessage(e));
+		}
 	}
 
 	private void mainLoop() {
@@ -514,6 +531,7 @@ public class ConsoleUI implements AutoCloseable {
 		printInfo("Vault locked. Sensitive actions are unavailable until you unlock it.");
 	}
 
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	private boolean ensureUnlocked() {
 		if (session.isUnlocked())
 			return true;
@@ -758,12 +776,4 @@ public class ConsoleUI implements AutoCloseable {
 		session.close();
 	}
 
-	private static final class DaemonThreadFactory implements ThreadFactory {
-		@Override
-		public Thread newThread(Runnable runnable) {
-			Thread thread = new Thread(runnable, "password-manager-auto-lock");
-			thread.setDaemon(true);
-			return thread;
-		}
-	}
 }

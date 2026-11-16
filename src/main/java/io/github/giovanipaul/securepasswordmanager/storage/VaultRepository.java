@@ -83,9 +83,8 @@ public class VaultRepository {
 			ciphertext = crypto.encrypt(plaintext, key, iv, authenticatedMetadata(vf));
 			vf.ciphertextB64 = Base64.getEncoder().encodeToString(ciphertext);
 
-			byte[] fileJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(vf)
-					.getBytes(StandardCharsets.UTF_8);
-			Files.write(tempPath, fileJson);
+			Files.writeString(tempPath, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(vf),
+					StandardCharsets.UTF_8);
 			moveIntoPlace(tempPath, absolutePath);
 		} finally {
 			if (tempPath != null) {
@@ -138,6 +137,19 @@ public class VaultRepository {
 			CryptoService.wipe(salt);
 			CryptoService.wipe(iv);
 		}
+	}
+
+	/**
+	 * Check only after a successful load, since version 2 metadata is
+	 * authenticated.
+	 */
+	public boolean needsKeyDerivationUpgrade(Path path) throws IOException {
+		if (Files.size(path) > MAX_VAULT_FILE_BYTES) {
+			throw new IOException("Vault file exceeds the maximum supported size.");
+		}
+		VaultFile file = mapper.readValue(Files.readString(path, StandardCharsets.UTF_8), VaultFile.class);
+		validateVaultFile(file);
+		return file.version == 1 || file.iterations < CryptoService.PBKDF2_ITERATIONS;
 	}
 
 	private static void validateVaultFile(VaultFile vaultFile) throws IOException {

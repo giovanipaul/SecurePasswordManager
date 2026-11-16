@@ -106,7 +106,7 @@ Build the self-contained executable JAR:
 
 ```bash
 ./mvnw clean verify
-java -jar target/secure-password-manager-1.0-SNAPSHOT-all.jar
+java -jar target/secure-password-manager-1.0.0-all.jar
 ```
 
 `verify` runs tests, coverage enforcement, SpotBugs, formatting checks, and
