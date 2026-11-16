@@ -6,8 +6,8 @@
 
 ![Secure Password Manager terminal demo](docs/assets/secure-password-manager-demo.gif)
 
-[Download the runnable v1.0.0 JAR](https://github.com/giovanipaul/SecurePasswordManager/releases/download/v1.0.0/secure-password-manager-1.0.0-all.jar)
-· [View release notes](https://github.com/giovanipaul/SecurePasswordManager/releases/tag/v1.0.0)
+[Download the runnable v1.1.0 JAR](https://github.com/giovanipaul/SecurePasswordManager/releases/download/v1.1.0/secure-password-manager-1.1.0-all.jar)
+· [View release notes](https://github.com/giovanipaul/SecurePasswordManager/releases/tag/v1.1.0)
 
 An offline Java password manager demonstrating authenticated encryption,
 crash-safe persistence, session lifecycle management, automated testing, and
@@ -106,7 +106,7 @@ Build the self-contained executable JAR:
 
 ```bash
 ./mvnw clean verify
-java -jar target/secure-password-manager-1.0.0-all.jar
+java -jar target/secure-password-manager-1.1.0-all.jar
 ```
 
 `verify` runs tests, coverage enforcement, SpotBugs, formatting checks, and
@@ -210,7 +210,7 @@ Run all tests:
 ./mvnw test
 ```
 
-The 24-test JUnit suite covers:
+The 25-test JUnit suite covers:
 
 - CRUD, search, duplicate handling, blank fields, and clear-vault behavior
 - Password policy and generator constraints
