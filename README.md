@@ -6,8 +6,11 @@
 
 ![Secure Password Manager terminal demo](docs/assets/secure-password-manager-demo.gif)
 
-[Download the runnable v1.1.0 JAR](https://github.com/giovanipaul/SecurePasswordManager/releases/download/v1.1.0/secure-password-manager-1.1.0-all.jar)
-· [View release notes](https://github.com/giovanipaul/SecurePasswordManager/releases/tag/v1.1.0)
+[Download the runnable v1.0.0 JAR](https://github.com/giovanipaul/SecurePasswordManager/releases/download/v1.0.0/secure-password-manager-1.0.0-all.jar)
+· [View release notes](https://github.com/giovanipaul/SecurePasswordManager/releases/tag/v1.0.0)
+
+The published JAR does not yet include the breach-check feature described below;
+build the current source to try it.
 
 An offline Java password manager demonstrating authenticated encryption,
 crash-safe persistence, session lifecycle management, automated testing, and
@@ -192,10 +195,12 @@ The check uses k-anonymity: the password is hashed locally with SHA-1 and
 only the first 5 characters of the hash are sent to
 `api.pwnedpasswords.com`. The service returns every breached hash sharing
 that prefix, and the match is done locally. The password and the full hash
-never leave the machine. A 5-character prefix narrows the password to roughly
-one million possible hashes; that is the documented trade-off of the design.
+never leave the machine. Five hexadecimal characters allow roughly one million
+possible prefixes; many possible full hashes share each prefix. The service and
+network intermediaries can still observe the requester's IP address, and the
+prefix can reveal information about a password to someone with candidate hashes.
 
-The result reports how many times the password appeared in known breaches,
+The result reports how many times the password appeared in known breach data,
 or that it was not found. A password that appears should be changed
 everywhere it is used. Not being found does not prove a password is strong;
 it only means it has not appeared in a known public breach.
@@ -237,7 +242,7 @@ Run all tests:
 ./mvnw test
 ```
 
-The 39-test JUnit suite covers:
+The JUnit suite covers:
 
 - CRUD, search, duplicate handling, blank fields, and clear-vault behavior
 - Password policy and generator constraints

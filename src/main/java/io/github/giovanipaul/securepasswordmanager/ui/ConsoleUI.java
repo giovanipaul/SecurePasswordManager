@@ -476,7 +476,7 @@ public class ConsoleUI implements AutoCloseable {
 		try {
 			long occurrences = breachChecker.check(password);
 			if (occurrences > 0) {
-				printError("This password appeared in " + occurrences + " known data breach(es). Change it.");
+				printError("This password was seen " + occurrences + " times in breach data. Change it.");
 			} else {
 				printSuccess("This password was not found in the HaveIBeenPwned breach data.");
 			}

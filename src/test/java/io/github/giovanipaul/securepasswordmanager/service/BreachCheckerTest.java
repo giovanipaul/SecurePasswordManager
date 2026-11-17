@@ -42,11 +42,32 @@ class BreachCheckerTest {
 	}
 
 	@Test
-	void ignoresMalformedLinesWithoutMatchingSuffix() throws Exception {
+	void rejectsMalformedLinesWithoutMatchingSuffix() {
 		String range = "garbage\n:5\nABCDEF\n\n0018A45C4D1DEF81644B54AB7F969B88D65:3\n";
 		BreachChecker checker = new BreachChecker(prefix -> range);
 
-		assertEquals(0, checker.check("password".toCharArray()));
+		assertThrows(IOException.class, () -> checker.check("password".toCharArray()));
+	}
+
+	@Test
+	void rejectsEmptyAndWhitespaceOnlyResponses() {
+		for (String response : new String[]{"", "  \n"}) {
+			BreachChecker checker = new BreachChecker(prefix -> response);
+			assertThrows(IOException.class, () -> checker.check("password".toCharArray()));
+		}
+	}
+
+	@Test
+	void validatesWholeResponseEvenAfterMatchingLine() {
+		BreachChecker checker = new BreachChecker(prefix -> PASSWORD_SUFFIX + ":42\ninvalid\n");
+		assertThrows(IOException.class, () -> checker.check("password".toCharArray()));
+	}
+
+	@Test
+	void acceptsZeroCountPaddingButRejectsNegativeCounts() throws Exception {
+		assertEquals(0, new BreachChecker(prefix -> PASSWORD_SUFFIX + ":0\n").check("password".toCharArray()));
+		assertThrows(IOException.class,
+				() -> new BreachChecker(prefix -> PASSWORD_SUFFIX + ":-1\n").check("password".toCharArray()));
 	}
 
 	@Test
