@@ -6,11 +6,8 @@
 
 ![Secure Password Manager terminal demo](docs/assets/secure-password-manager-demo.gif)
 
-[Download the runnable v1.0.0 JAR](https://github.com/giovanipaul/SecurePasswordManager/releases/download/v1.0.0/secure-password-manager-1.0.0-all.jar)
-· [View release notes](https://github.com/giovanipaul/SecurePasswordManager/releases/tag/v1.0.0)
-
-The published JAR does not yet include the breach-check feature described below;
-build the current source to try it.
+[Download the runnable v1.1.0 JAR](https://github.com/giovanipaul/SecurePasswordManager/releases/download/v1.1.0/secure-password-manager-1.1.0-all.jar)
+· [View release notes](https://github.com/giovanipaul/SecurePasswordManager/releases/tag/v1.1.0)
 
 An offline Java password manager demonstrating authenticated encryption,
 crash-safe persistence, session lifecycle management, automated testing, and
