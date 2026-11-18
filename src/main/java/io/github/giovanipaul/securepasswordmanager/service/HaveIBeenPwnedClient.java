@@ -1,12 +1,18 @@
 package io.github.giovanipaul.securepasswordmanager.service;
 
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Flow;
 
 /**
  * Live HaveIBeenPwned range client. Sends only the 5-character hash prefix; the
@@ -37,14 +43,52 @@ final class HaveIBeenPwnedClient implements BreachRangeFetcher {
 		HttpRequest request = HttpRequest.newBuilder(URI.create(RANGE_URL + prefix))
 				.header("User-Agent", "SecurePasswordManager/1.1.0").header("Add-Padding", "true")
 				.timeout(REQUEST_TIMEOUT).GET().build();
-		HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+		HttpResponse<byte[]> response = httpClient.send(request, info -> new BoundedBodySubscriber());
 		if (response.statusCode() != 200) {
 			throw new IOException("HaveIBeenPwned returned HTTP " + response.statusCode() + ".");
 		}
-		byte[] body = response.body();
-		if (body == null || body.length > MAX_RESPONSE_BYTES) {
-			throw new IOException("HaveIBeenPwned returned an unexpected response.");
+		return new String(response.body(), StandardCharsets.UTF_8);
+	}
+
+	static final class BoundedBodySubscriber implements HttpResponse.BodySubscriber<byte[]> {
+		private final CompletableFuture<byte[]> body = new CompletableFuture<>();
+		private final ByteArrayOutputStream output = new ByteArrayOutputStream();
+		private Flow.Subscription subscription;
+
+		@Override
+		public CompletionStage<byte[]> getBody() {
+			return body.minimalCompletionStage();
 		}
-		return new String(body, StandardCharsets.UTF_8);
+
+		@Override
+		public void onSubscribe(Flow.Subscription subscription) {
+			this.subscription = subscription;
+			subscription.request(1);
+		}
+
+		@Override
+		public void onNext(List<ByteBuffer> buffers) {
+			for (ByteBuffer buffer : buffers) {
+				if (buffer.remaining() > MAX_RESPONSE_BYTES - output.size()) {
+					subscription.cancel();
+					body.completeExceptionally(new IOException("HaveIBeenPwned returned an oversized response."));
+					return;
+				}
+				byte[] chunk = new byte[buffer.remaining()];
+				buffer.get(chunk);
+				output.writeBytes(chunk);
+			}
+			subscription.request(1);
+		}
+
+		@Override
+		public void onError(Throwable error) {
+			body.completeExceptionally(error);
+		}
+
+		@Override
+		public void onComplete() {
+			body.complete(output.toByteArray());
+		}
 	}
 }

@@ -47,4 +47,6 @@ The application does not claim to protect against:
 - No recovery mechanism or hidden key exists.
 - Breach checks send only the first 5 characters of a password's SHA-1 hash
   to HaveIBeenPwned; the password and the full hash never leave the machine.
-  The range response is treated as untrusted input and parsed defensively.
+  The service can observe the requester's IP address, and the prefix can reveal
+  information to an observer with candidate hashes. The range response is
+  treated as untrusted input and parsed defensively.

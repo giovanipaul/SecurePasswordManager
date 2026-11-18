@@ -112,7 +112,7 @@ class ConsoleUITest {
 		ui.run(vaultPath);
 
 		String terminal = output.toString(StandardCharsets.UTF_8);
-		assertTrue(terminal.contains("appeared in 9543778 known data breach(es)"));
+		assertTrue(terminal.contains("was seen 9543778 times in breach data"));
 		assertTrue(terminal.contains("Only the first 5 characters of the password hash are sent"));
 	}
 

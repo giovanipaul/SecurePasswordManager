@@ -67,25 +67,31 @@ public final class BreachChecker {
 	}
 
 	private static long findOccurrences(String range, String suffix) throws IOException {
+		boolean foundLine = false;
+		long occurrences = 0;
 		for (String line : range.split("\\R")) {
 			String trimmed = line.trim();
 			if (trimmed.isEmpty()) {
 				continue;
 			}
 			String[] parts = trimmed.split(":", -1);
-			if (parts.length != 2) {
-				continue;
-			}
-			if (!parts[0].equalsIgnoreCase(suffix)) {
-				continue;
+			if (parts.length != 2 || !parts[0].matches("[0-9A-Fa-f]{35}") || !parts[1].matches("[0-9]+")) {
+				throw new IOException("HaveIBeenPwned returned a malformed response.");
 			}
 			try {
-				return Long.parseLong(parts[1].trim());
+				long count = Long.parseLong(parts[1]);
+				if (parts[0].equalsIgnoreCase(suffix)) {
+					occurrences = count;
+				}
+				foundLine = true;
 			} catch (NumberFormatException e) {
 				throw new IOException("HaveIBeenPwned returned an unreadable breach count.", e);
 			}
 		}
-		return 0;
+		if (!foundLine) {
+			throw new IOException("HaveIBeenPwned returned an empty response.");
+		}
+		return occurrences;
 	}
 
 	private static String sha1Hex(char[] password) {
