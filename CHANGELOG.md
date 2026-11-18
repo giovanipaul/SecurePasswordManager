@@ -5,6 +5,8 @@ and releases use semantic versioning.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-17
+
 ### Added
 
 - Check passwords against the HaveIBeenPwned breach database using k-anonymity: only the first 5 characters of the password's SHA-1 hash are sent, and the password itself never leaves the machine
@@ -13,8 +15,6 @@ and releases use semantic versioning.
 
 - Reject empty or malformed breach-check responses instead of reporting a false negative
 - Bound breach-check response reads and clarify result counts and privacy trade-offs
-
-## [1.1.0] - 2026-11-16
 
 ### Security
 
