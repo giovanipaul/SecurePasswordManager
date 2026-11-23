@@ -5,6 +5,10 @@ and releases use semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Ignore randomized temporary vault files to reduce the risk of accidentally committing encrypted vault data
+
 ## [1.1.0] - 2026-11-17
 
 ### Added

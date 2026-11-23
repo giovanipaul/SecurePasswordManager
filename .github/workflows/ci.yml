@@ -30,6 +30,17 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: maven
 
+      - name: Verify vault files are ignored
+        shell: bash
+        run: |
+          git check-ignore -q --no-index vault.json
+          git check-ignore -q --no-index .vault-test.tmp
+          git check-ignore -q --no-index nested/.vault-test.tmp
+          if git check-ignore -q --no-index unrelated.tmp; then
+            echo "Unrelated temporary files should not be ignored by the vault rule."
+            exit 1
+          fi
+
       - name: Verify project
         run: ./mvnw --batch-mode --no-transfer-progress clean verify
         shell: bash
