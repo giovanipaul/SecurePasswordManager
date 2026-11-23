@@ -43,3 +43,4 @@ build/
 vault.json
 vault.json.tmp
 vault.json.backup
+.vault-*.tmp

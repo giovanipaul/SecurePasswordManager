@@ -61,6 +61,10 @@ The application stores one JSON envelope containing Base64-encoded encryption me
 - **Defensive parsing:** vault and ciphertext sizes are bounded before expensive parsing or decryption
 - **Local data protection:** `vault.json` and temporary vault files are excluded by `.gitignore`
 
+If you choose a custom vault filename, store it outside the repository or add
+that filename to your own Git ignore rules. Ignore rules do not remove files
+that have already been committed.
+
 No encryption keys or passwords are hard-coded in the source.
 
 ## Security Decisions
